@@ -5,6 +5,7 @@
     <title>排隊詳情</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
     <style>
+        /* ... CSS 保持不變 ... */
         body{font-family:'Nunito',sans-serif;background:#F5F5E8;color:#8B5A2B;padding:20px;margin:0}
         .container{max-width:800px;margin:0 auto}
         .section{background:white;padding:20px;border-radius:15px;border:2px solid #96C8A4;margin-bottom:20px}
@@ -12,13 +13,14 @@
         li{padding:10px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center}
         .btn{padding:10px 20px;border:none;border-radius:8px;color:white;cursor:pointer;font-weight:bold;margin:5px}
         .blue{background:#2980b9} .green{background:#27ae60} .red{background:#c0392b}
-        .wait{color:#e67e22;font-weight:bold} .play{color:#27ae60;font-weight:bold}
+        .wait{color:#e67e22;font-weight:bold} .play{color:#27ae60;font-weight:bold} 
+        .pending{color:#d35400;font-weight:bold;animation: blink 1s infinite;}
         
+        @keyframes blink { 50% { opacity: 0.5; } }
+
         .chat-box { max-height: 300px; overflow-y: auto; background: #f9f9f9; padding: 10px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 10px; }
         .msg-item { margin-bottom: 8px; padding: 5px; border-bottom: 1px dashed #eee; }
         .msg-user { font-weight: bold; color: #4A7A5C; font-size: 0.9rem; }
-        .msg-text { color: #333; }
-        .msg-time { font-size: 0.7rem; color: #999; float: right; }
         .input-group { display: flex; gap: 10px; }
         .input-group input { flex: 1; padding: 10px; border: 2px solid #ddd; border-radius: 8px; }
     </style>
@@ -26,18 +28,17 @@
 <body>
     <div class="container">
         <a href="index.html" style="text-decoration:none;color:#73a0c0;font-weight:bold">← 返列表</a>
-        
         <div id="info" class="section" style="text-align:center">載入中...</div>
         
         <div class="section" style="border-color:#73a0c0">
-            <h3> 排隊列表 (每5秒更新)</h3>
+            <h3>👫 排隊列表 (每5秒更新)</h3>
             <div id="status-bar" style="margin-bottom:10px;font-weight:bold"></div>
             <ul id="list"></ul>
             <div id="action" style="text-align:center;padding:20px;background:#ecf0f1;border-radius:10px;margin-top:20px"></div>
         </div>
 
         <div class="section" style="border-color:#f1c40f">
-            <h3> 留言板</h3>
+            <h3>💬 留言板</h3>
             <div id="chat-list" class="chat-box"></div>
             <div class="input-group">
                 <input type="text" id="chat-input" placeholder="請輸入留言...">
@@ -51,6 +52,8 @@
         const urlParams = new URLSearchParams(window.location.search);
         const hostEmail = urlParams.get('host');
         const user = JSON.parse(localStorage.getItem('acnh_user'));
+
+        let queueTimer = null;
 
         setInterval(loadData, 5000);
         loadData();
@@ -75,7 +78,7 @@
 
         function renderInfo(island) {
             document.getElementById('info').innerHTML = `
-                <h2> ${island.island_name}</h2>
+                <h2>🌴 ${island.island_name}</h2>
                 <div style="font-size:2rem;color:#73a0c0;font-weight:bold;margin:10px">${island.dodo_code}</div>
                 <p>Host: ${island.user_email} (限 ${island.max_visitors} 人)</p>
                 <p>備註: ${island.note || '無'}</p>
@@ -89,12 +92,17 @@
             list.innerHTML = "";
             
             let myStatus = null;
+            let myData = null;
             let currentOnIsland = 0;
             const serverNow = new Date(serverTimeStr).getTime();
 
             queue.forEach(q => {
-                if(q.status === 'on_island') currentOnIsland++;
-                if(user && q.visitor_email === user.email) myStatus = q.status;
+                // on_island 和 pending_entry 都算佔用名額
+                if(q.status === 'on_island' || q.status === 'pending_entry') currentOnIsland++;
+                if(user && q.visitor_email === user.email) {
+                    myStatus = q.status;
+                    myData = q;
+                }
             });
 
             const isFull = currentOnIsland >= maxVisitors;
@@ -103,7 +111,7 @@
             if(queue.length === 0) list.innerHTML = "<li style='justify-content:center;color:#999'>暫時冇人排隊</li>";
 
             queue.forEach((q, idx) => {
-                let statusHtml = `<span class="wait">等待中 (${idx+1}位)</span>`;
+                let statusHtml = "";
                 
                 if(q.status === 'on_island') {
                     const endTime = new Date(q.start_time).getTime() + (10 * 60 * 1000);
@@ -111,32 +119,56 @@
                     if(diff > 0) {
                         const m = Math.floor(diff/60000);
                         const s = Math.floor((diff%60000)/1000);
-                        statusHtml = `<span class="play">️ 玩樂中 (剩 ${m}分${s}秒)</span>`;
+                        statusHtml = `<span class="play">🏝️ 玩樂中 (${m}分${s}秒)</span>`;
                     } else {
                         statusHtml = `<span style="color:red">時間到</span>`;
                     }
+                } else if (q.status === 'pending_entry') {
+                    // 計算 30 秒倒數
+                    const endTime = new Date(q.pending_start_time).getTime() + (30 * 1000);
+                    const diff = endTime - serverNow;
+                    if(diff > 0) {
+                        const s = Math.floor(diff/1000);
+                        statusHtml = `<span class="pending">🔔 請入島！剩餘 ${s} 秒</span>`;
+                    } else {
+                        statusHtml = `<span style="color:red">逾時</span>`;
+                    }
+                } else {
+                    // Waiting 狀態，不顯示名次，因為 pending_entry 可能在任何位置
+                    statusHtml = `<span class="wait">等待中</span>`;
                 }
                 
-                // [確認] 這裡顯示的是 visitor_name (Nick Name)
-                list.innerHTML += `<li><span>玩家: ${q.visitor_name}</span>${statusHtml}</li>`;
+                list.innerHTML += `<li><span>${q.visitor_name}</span>${statusHtml}</li>`;
             });
 
+            // --- 按鈕區域邏輯 ---
             if(!user) {
                 action.innerHTML = `<a href="login.html" class="btn blue" style="text-decoration:none">請先登入</a>`;
             } else if(hostEmail === user.email) {
-                 action.innerHTML = `<p>你係島主，請去 Host 頁面管理。</p>`;
+                 action.innerHTML = `<p>你係島主，可於此頁回覆留言。</p>`;
             } else if(!myStatus) {
                 action.innerHTML = `<button onclick="api('join')" class="btn blue">➕ 加入排隊</button>`;
             } else if(myStatus === 'waiting') {
                 action.innerHTML = `
-                    <p>成功飛入島後，請按綠色掣 (如果滿人會入唔到)：</p>
-                    <button onclick="api('enter')" class="btn green">✈️ 我已成功入島 (開始倒數)</button>
+                    <p>排隊中... 請耐心等候系統通知。</p>
+                    <p style="font-size:0.9rem; color:#666">當有名額時，你的狀態會變成「請入島」。</p>
                     <button onclick="api('leave')" class="btn red">❌ 唔排了</button>
+                `;
+            } else if(myStatus === 'pending_entry') {
+                // 這裡顯示 30 秒倒數提示
+                const endTime = new Date(myData.pending_start_time).getTime() + (30 * 1000);
+                const diff = Math.floor((endTime - serverNow) / 1000);
+                action.innerHTML = `
+                    <h3 style="color:#d35400">🎉 輪到你了！請立刻飛往島嶼！</h3>
+                    <p>請在 Switch 輸入 Dodo Code，成功起飛後按下按鈕。</p>
+                    <p style="font-weight:bold; color:red">請於 ${diff > 0 ? diff : 0} 秒內確認，否則重新排隊。</p>
+                    <button onclick="api('enter')" class="btn green" style="font-size:1.2rem; padding:15px 30px;">✈️ 我已成功起飛</button>
+                    <button onclick="api('leave')" class="btn red">❌ 放棄機會</button>
                 `;
             } else if(myStatus === 'on_island') {
                 action.innerHTML = `
                     <h3 style="color:#c0392b">計時中！請於 10 分鐘內離開。</h3>
-                    <button onclick="api('leave')" class="btn red"> 我已離開島嶼</button>
+                    <button onclick="api('leave')" class="btn red">👋 我已離開島嶼</button>
                 `;
             }
         }
@@ -155,7 +187,7 @@
                         <div class="msg-item">
                             <span class="msg-user" style="${style}">${c.user_name}${isHost}</span>
                             <span class="msg-time">${time}</span>
-                            <div class="msg-text">${c.message}</div>
+                            <div>${c.message}</div>
                         </div>
                     `;
                 });
@@ -172,12 +204,7 @@
             try {
                 await fetch(`${API_URL}/comment`, {
                     method: 'POST', headers: {'Content-Type':'application/json'},
-                    body: JSON.stringify({ 
-                        hostEmail, 
-                        userEmail: user.email, 
-                        userName: user.username, 
-                        message 
-                    })
+                    body: JSON.stringify({ hostEmail, userEmail: user.email, userName: user.username, message })
                 });
                 input.value = "";
                 loadData();
