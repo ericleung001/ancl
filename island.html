@@ -2,122 +2,71 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>排隊詳情</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #27ae60; --secondary: #2980b9; --danger: #c0392b; --warning: #f39c12; }
-        body { font-family: 'Nunito', sans-serif; background: #F5F5E8; color: #5D4037; padding: 20px; margin: 0; }
-        
-        /* Top Bar */
-        .nav-bar { max-width: 1000px; margin: 0 auto 20px auto; display: flex; align-items: center; }
-        .back-btn { text-decoration: none; color: var(--secondary); font-weight: bold; font-size: 1.1rem; display: flex; align-items: center; }
-        
-        /* Layout Grid */
-        .main-grid { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr; /* PC: 左右各半 */
-            gap: 20px; 
-            max-width: 1000px; 
-            margin: 0 auto; 
-        }
-
-        /* Boxes */
-        .box { background: white; padding: 20px; border-radius: 20px; border: 2px solid #96C8A4; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .box h3 { margin-top: 0; color: #4A7A5C; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-
-        /* Info Section (Full Width) */
-        .info-box { grid-column: 1 / -1; text-align: center; border-color: var(--secondary); }
-        .dodo-display { font-size: 2.5rem; color: var(--secondary); font-weight: bold; letter-spacing: 5px; margin: 10px 0; background: #f0f8ff; padding: 10px; border-radius: 15px; display: inline-block; }
-
-        /* Queue List */
-        ul { list-style: none; padding: 0; margin: 0; }
-        li { padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-        li.me { background-color: #fff8e1; border-left: 4px solid var(--warning); }
-        
-        /* Status Badges */
-        .badge { padding: 4px 8px; border-radius: 6px; font-size: 0.85rem; font-weight: bold; }
-        .wait { color: #95a5a6; background: #eee; }
-        .play { color: white; background: var(--primary); }
-        .pending { color: white; background: var(--warning); animation: blink 1s infinite; }
-        @keyframes blink { 50% { opacity: 0.7; } }
-
-        /* Action Area */
-        #action { text-align: center; padding: 15px; background: #f9f9f9; border-radius: 10px; margin-top: 15px; }
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-top: 5px; transition: 0.2s; }
-        .btn:active { transform: scale(0.98); }
-        .btn-blue { background: var(--secondary); }
-        .btn-green { background: var(--primary); }
-        .btn-red { background: var(--danger); }
-
-        /* Chat Box */
-        .chat-container { display: flex; flex-direction: column; height: 500px; } /* 固定高度 */
-        .chat-list { flex: 1; overflow-y: auto; background: #fafafa; padding: 10px; border-radius: 10px; border: 1px solid #eee; margin-bottom: 10px; }
-        .msg-item { margin-bottom: 10px; padding: 8px 12px; background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .msg-header { display: flex; justify-content: space-between; font-size: 0.8rem; color: #888; margin-bottom: 4px; }
-        .msg-user { font-weight: bold; color: #4A7A5C; }
-        .msg-host { color: var(--warning); }
-        
+        body{font-family:'Nunito',sans-serif;background:#F5F5E8;color:#8B5A2B;padding:20px;margin:0}
+        .container{max-width:800px;margin:0 auto}
+        .section{background:white;padding:20px;border-radius:15px;border:2px solid #96C8A4;margin-bottom:20px}
+        ul{list-style:none;padding:0}
+        li{padding:10px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center}
+        .btn{padding:10px 20px;border:none;border-radius:8px;color:white;cursor:pointer;font-weight:bold;margin:5px}
+        .blue{background:#2980b9} .green{background:#27ae60} .red{background:#c0392b}
+        .wait{color:#e67e22;font-weight:bold} .play{color:#27ae60;font-weight:bold} 
+        .pending{color:#d35400;font-weight:bold;animation: blink 1s infinite;}
+        @keyframes blink { 50% { opacity: 0.5; } }
+        .chat-box { max-height: 300px; overflow-y: auto; background: #f9f9f9; padding: 10px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 10px; }
+        .msg-item { margin-bottom: 8px; padding: 5px; border-bottom: 1px dashed #eee; }
+        .msg-user { font-weight: bold; color: #4A7A5C; font-size: 0.9rem; }
         .input-group { display: flex; gap: 10px; }
-        .input-group input { flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 1rem; }
-        .btn-send { width: auto; margin: 0; padding: 0 20px; background: var(--secondary); }
-
-        /* Mobile Optimization */
-        @media (max-width: 768px) {
-            .main-grid { grid-template-columns: 1fr; } /* 手機變單欄 */
-            .dodo-display { font-size: 1.8rem; letter-spacing: 2px; }
-            .chat-container { height: 400px; }
-        }
+        .input-group input { flex: 1; padding: 10px; border: 2px solid #ddd; border-radius: 8px; }
     </style>
 </head>
 <body>
-    <div class="nav-bar">
-        <a href="index.html" class="back-btn">← 返去列表</a>
-    </div>
-
-    <div class="main-grid">
-        <div id="info" class="box info-box">
-            <h2>載入中...</h2>
-        </div>
-
-        <div class="box">
-            <h3>👫 排隊列表 (5秒刷新)</h3>
-            <div id="status-bar" style="margin-bottom:10px; font-weight:bold; text-align:center;"></div>
+    <div class="container">
+        <a href="index.html" style="text-decoration:none;color:#73a0c0;font-weight:bold">← 返列表</a>
+        
+        <div id="info" class="section" style="text-align:center">載入中...</div>
+        
+        <div class="section" style="border-color:#73a0c0">
+            <h3>👫 排隊列表 (每5秒更新)</h3>
+            <div id="status-bar" style="margin-bottom:10px;font-weight:bold"></div>
             <ul id="list"></ul>
+            <div id="action" style="text-align:center;padding:20px;background:#ecf0f1;border-radius:10px;margin-top:20px"></div>
             
-            <div id="action">請登入操作</div>
+            <div id="notice-box" style="display:none; margin-top:20px; padding:15px; background:#fff3cd; border:1px solid #ffeeba; color:#856404; border-radius:10px;">
+                <h4 style="margin:0 0 10px 0;">⚠️ 島主注意事項</h4>
+                <div id="notice-content" style="white-space: pre-line;"></div>
+            </div>
         </div>
 
-        <div class="box chat-container">
+        <div class="section" style="border-color:#f1c40f">
             <h3>💬 留言板</h3>
-            <div id="chat-list" class="chat-list"></div>
+            <div id="chat-list" class="chat-box"></div>
             <div class="input-group">
-                <input type="text" id="chat-input" placeholder="留言...">
-                <button onclick="sendComment()" class="btn btn-send">發送</button>
+                <input type="text" id="chat-input" placeholder="請輸入留言...">
+                <button onclick="sendComment()" class="btn blue" style="margin:0">發送</button>
             </div>
         </div>
     </div>
 
     <script>
-        const API_URL = "https://api.ttctv-105.cc"; 
+        const API_URL = "https://api.ttctv-105.cc";
         const urlParams = new URLSearchParams(window.location.search);
         const hostEmail = urlParams.get('host');
         const user = JSON.parse(localStorage.getItem('acnh_user'));
-
-        // 自動滾動到底部 (只在第一次加載時)
-        let isFirstLoad = true;
 
         setInterval(loadData, 5000);
         loadData();
 
         async function loadData() {
-            if(!hostEmail) { document.body.innerHTML = "<h2 style='text-align:center'>無效連結</h2>"; return; }
+            if(!hostEmail) return;
             try {
                 const res = await fetch(`${API_URL}/island-detail?hostEmail=${encodeURIComponent(hostEmail)}`);
                 const json = await res.json();
 
                 if(json.status === 'error') {
-                    document.getElementById('info').innerHTML = `<h2 style="color:red">${json.message}</h2>`;
+                    document.getElementById('info').innerHTML = `<h2>${json.message}</h2>`;
                     document.getElementById('action').style.display = 'none';
                     return;
                 }
@@ -125,23 +74,29 @@
                 renderInfo(json.island);
                 renderQueue(json.queue, json.serverTime, json.island.max_visitors);
                 renderComments(json.comments);
-            } catch(e) { console.error(e); }
+            } catch(e) { console.log(e); }
         }
 
         function renderInfo(island) {
             document.getElementById('info').innerHTML = `
-                <h2 style="margin:0">🌴 ${island.island_name}</h2>
-                <div class="dodo-display">${island.dodo_code}</div>
-                <div style="display:flex; justify-content:center; gap:20px; flex-wrap:wrap;">
-                    <span>👤 <strong>Host:</strong> ${island.user_email.split('@')[0]}</span>
-                    <span>📝 <strong>備註:</strong> ${island.note || '無'}</span>
-                </div>
+                <h2>🌴 ${island.island_name}</h2>
+                <div style="font-size:2rem;color:#73a0c0;font-weight:bold;margin:10px">${island.dodo_code}</div>
+                <p>Host: ${island.user_email} (限 ${island.max_visitors} 人)</p>
+                <p>備註: ${island.note || '無'}</p>
             `;
+            // 顯示注意事項
+            if (island.notice && island.notice.trim() !== "") {
+                document.getElementById('notice-box').style.display = "block";
+                document.getElementById('notice-content').innerText = island.notice;
+            } else {
+                document.getElementById('notice-box').style.display = "none";
+            }
         }
 
         function renderQueue(queue, serverTimeStr, maxVisitors) {
             const list = document.getElementById('list');
             const action = document.getElementById('action');
+            const statusBar = document.getElementById('status-bar');
             list.innerHTML = "";
             
             let myStatus = null;
@@ -155,115 +110,90 @@
             });
 
             const isFull = currentOnIsland >= maxVisitors;
-            document.getElementById('status-bar').innerHTML = `島上: ${currentOnIsland} / ${maxVisitors} 人 ${isFull ? '<span style="color:red">(滿)</span>' : '<span style="color:green">(有位)</span>'}`;
+            statusBar.innerHTML = `島上人數: ${currentOnIsland} / ${maxVisitors} ${isFull ? '<span style="color:red">(已滿)</span>' : '<span style="color:green">(有名額)</span>'}`;
 
-            if(queue.length === 0) list.innerHTML = "<li style='justify-content:center;color:#999;padding:20px'>暫時冇人排隊</li>";
+            if(queue.length === 0) list.innerHTML = "<li style='justify-content:center;color:#999'>暫時冇人排隊</li>";
 
             queue.forEach((q, idx) => {
-                let badge = `<span class="badge wait">等待 ${idx+1}</span>`;
-                let rowClass = (user && q.visitor_email === user.email) ? "me" : "";
-                
+                let statusHtml = "";
                 if(q.status === 'on_island') {
                     const endTime = new Date(q.start_time).getTime() + (10 * 60 * 1000);
                     const diff = endTime - serverNow;
-                    const m = Math.floor(diff/60000);
-                    const s = Math.floor((diff%60000)/1000);
-                    badge = diff > 0 ? `<span class="badge play">剩 ${m}分${s}秒</span>` : `<span class="badge" style="background:red;color:white">時間到</span>`;
+                    if(diff > 0) {
+                        const m = Math.floor(diff/60000);
+                        const s = Math.floor((diff%60000)/1000);
+                        statusHtml = `<span class="play">🏝️ 玩樂中 (${m}分${s}秒)</span>`;
+                    } else {
+                        statusHtml = `<span style="color:red">時間到</span>`;
+                    }
                 } else if (q.status === 'pending_entry') {
                     const endTime = new Date(q.pending_start_time).getTime() + (30 * 1000);
                     const diff = Math.floor((endTime - serverNow) / 1000);
-                    badge = diff > 0 ? `<span class="badge pending">入島確認 ${diff}s</span>` : `<span class="badge" style="background:red;color:white">逾時</span>`;
+                    if(diff > 0) statusHtml = `<span class="pending">🔔 請入島！剩餘 ${diff} 秒</span>`;
+                    else statusHtml = `<span style="color:red">逾時</span>`;
+                } else {
+                    statusHtml = `<span class="wait">等待中</span>`;
                 }
-                
-                list.innerHTML += `<li class="${rowClass}"><span>${q.visitor_name}</span>${badge}</li>`;
+                list.innerHTML += `<li><span>${q.visitor_name}</span>${statusHtml}</li>`;
             });
 
-            // 按鈕邏輯
             if(!user) {
-                action.innerHTML = `<a href="login.html" class="btn btn-blue" style="text-decoration:none;display:block">請先登入</a>`;
+                action.innerHTML = `<a href="login.html" class="btn blue" style="text-decoration:none">請先登入</a>`;
             } else if(hostEmail === user.email) {
-                 action.innerHTML = `<p style="color:#2980b9;font-weight:bold">你是島主</p>`;
+                 action.innerHTML = `<p>你係島主。</p>`;
             } else if(!myStatus) {
-                action.innerHTML = `<button onclick="api('join')" class="btn btn-blue">➕ 加入排隊</button>`;
+                action.innerHTML = `<button onclick="api('join')" class="btn blue">➕ 加入排隊</button>`;
             } else if(myStatus === 'waiting') {
-                action.innerHTML = `
-                    <h4 style="margin:0 0 10px 0;color:#e67e22">排隊中...</h4>
-                    <button onclick="api('leave')" class="btn btn-red">❌ 取消排隊</button>
-                `;
+                action.innerHTML = `<p>排隊中... 有位時會通知你。</p><button onclick="api('leave')" class="btn red">❌ 唔排了</button>`;
             } else if(myStatus === 'pending_entry') {
                 const endTime = new Date(myData.pending_start_time).getTime() + (30 * 1000);
                 const diff = Math.floor((endTime - serverNow) / 1000);
                 action.innerHTML = `
-                    <h3 style="color:#d35400;margin:0">🎉 輪到你了！</h3>
-                    <p style="font-size:0.9rem">請於 <span style="color:red;font-size:1.2rem">${diff>0?diff:0}</span> 秒內起飛</p>
-                    <button onclick="api('enter')" class="btn btn-green" style="margin-bottom:10px">✈️ 成功起飛</button>
-                    <button onclick="api('leave')" class="btn btn-red">❌ 放棄</button>
+                    <h3 style="color:#d35400">🎉 輪到你了！</h3>
+                    <p style="font-weight:bold;color:red">請於 ${diff>0?diff:0} 秒內確認，否則重排。</p>
+                    <button onclick="api('enter')" class="btn green">✈️ 我已起飛</button>
+                    <button onclick="api('leave')" class="btn red">❌ 放棄</button>
                 `;
             } else if(myStatus === 'on_island') {
-                action.innerHTML = `
-                    <h3 style="color:#27ae60;margin:0">🏝️ 遊玩中</h3>
-                    <p style="font-size:0.9rem">請於限時內離開</p>
-                    <button onclick="api('leave')" class="btn btn-red">👋 離開島嶼</button>
-                `;
+                action.innerHTML = `<h3 style="color:#c0392b">計時中！請於 10 分鐘內離開。</h3><button onclick="api('leave')" class="btn red">👋 我已離開</button>`;
             }
         }
 
         function renderComments(comments) {
             const chatList = document.getElementById('chat-list');
             let html = "";
-            if(!comments || comments.length === 0) html = "<div style='color:#999;text-align:center;padding:20px'>暫無留言</div>";
+            if(!comments || comments.length === 0) html = "<div style='color:#999;text-align:center'>暫時未有留言</div>";
             else {
                 comments.forEach(c => {
                     const time = new Date(c.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                    const isHost = c.user_email === hostEmail ? " <span class='msg-host'>(Host)</span>" : "";
-                    html += `
-                        <div class="msg-item">
-                            <div class="msg-header">
-                                <span class="msg-user">${c.user_name}${isHost}</span>
-                                <span class="msg-time">${time}</span>
-                            </div>
-                            <div class="msg-text">${c.message}</div>
-                        </div>
-                    `;
+                    const style = c.user_email === hostEmail ? "color:#d35400" : "";
+                    const isHost = c.user_email === hostEmail ? " (Host)" : "";
+                    html += `<div class="msg-item"><span class="msg-user" style="${style}">${c.user_name}${isHost}</span><span class="msg-time">${time}</span><div>${c.message}</div></div>`;
                 });
             }
             chatList.innerHTML = html;
-            
-            if(isFirstLoad) {
-                chatList.scrollTop = chatList.scrollHeight;
-                isFirstLoad = false;
-            }
         }
 
         async function sendComment() {
-            const input = document.getElementById('chat-input');
-            const message = input.value.trim();
+            const msg = document.getElementById('chat-input').value.trim();
             if(!user) { alert("請先登入"); return; }
-            if(!message) return;
-
-            try {
-                await fetch(`${API_URL}/comment`, {
-                    method: 'POST', headers: {'Content-Type':'application/json'},
-                    body: JSON.stringify({ hostEmail, userEmail: user.email, userName: user.username, message })
-                });
-                input.value = "";
-                loadData();
-                // 發送後滾到底部
-                const chatList = document.getElementById('chat-list');
-                chatList.scrollTop = chatList.scrollHeight;
-            } catch(e) { alert("發送失敗"); }
+            if(!msg) return;
+            await fetch(`${API_URL}/comment`, {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ hostEmail, userEmail: user.email, userName: user.username, message: msg })
+            });
+            document.getElementById('chat-input').value = "";
+            loadData();
         }
 
         async function api(act) {
-            try {
-                const res = await fetch(`${API_URL}/queue/${act}`, {
-                    method: 'POST', headers: {'Content-Type':'application/json'},
-                    body: JSON.stringify({ hostEmail, visitorEmail: user.email, visitorName: user.username })
-                });
-                const json = await res.json();
-                if(json.status === 'error') alert(json.message);
-                loadData();
-            } catch (e) { alert("連線錯誤"); }
+            const res = await fetch(`${API_URL}/queue/${act}`, {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ hostEmail, visitorEmail: user.email, visitorName: user.username })
+            });
+            const json = await res.json();
+            if(json.status === 'error') alert(json.message);
+            loadData();
         }
     </script>
 </body>
